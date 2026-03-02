@@ -90,6 +90,52 @@ button:disabled {
 .summary div {
     margin:5px 0;
 }
+
+.download-section {
+    margin-top: 50px;
+}
+
+.download-card {
+    background: #252744;
+    border-radius: 18px;
+    padding: 25px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    transition: 0.25s;
+}
+
+.download-card:hover {
+    transform: translateY(-4px);
+}
+
+.download-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.download-desc {
+    font-size: 13px;
+    opacity: 0.75;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.download-btn {
+    display: inline-block;
+    padding: 12px 24px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    background: linear-gradient(135deg,#4e73ff,#6a5cff);
+    color: white;
+    transition: 0.2s;
+}
+
+.download-btn:hover {
+    background: linear-gradient(135deg,#3d5de0,#5a4fe0);
+    transform: scale(1.05);
+}
 </style>
 </head>
 
@@ -106,7 +152,21 @@ button:disabled {
         <div class="summary" id="summaryBox"></div>
     </div>
 </div>
+<div class="download-section">
+    <div class="download-card">
+        <div class="download-title">📦 파티 스캐너 프로그램</div>
+        <div class="download-desc">
+            LDPlayer 실행 후 백그라운드에서 대기합니다.<br>
+            관리자 권한으로 실행해주세요.
+        </div>
 
+        <a href="https://github.com/Sukryak/ms-idle-battle-power/releases/download/ms_idle/scanner.exe"
+           class="download-btn"
+           target="_blank">
+            ⬇ 프로그램 다운로드 (v1.0)
+        </a>
+    </div>
+</div>
 <script>
 
 const API_URL = "https://msidlepower.netlify.app/.netlify/functions/manage";
@@ -206,4 +266,5 @@ function renderUI(data) {
 
 </body>
 </html>
+
 
