@@ -57,9 +57,20 @@ exports.handler = async function(event) {
         }
 
         if (type === "data") {
-            return { statusCode: 200, headers, body: JSON.stringify(state.data) };
-        }
+    const responseData = state.data;
+
+    // 🔥 데이터 소비 후 초기화
+    state.data = [];
+    saveState(state);
+
+    return { 
+        statusCode: 200, 
+        headers, 
+        body: JSON.stringify(responseData) 
+    };
+}
     }
 
     return { statusCode: 400, headers, body: "Bad Request" };
+
 };
