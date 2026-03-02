@@ -1,103 +1,117 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>전투력 스캐너</title>
-    <!-- 스타일 생략 (이전과 동일) -->
+<meta charset="UTF-8">
+<title>파티 전투력 스캐너</title>
+
+<style>
+body {
+    margin:0;
+    font-family: "Segoe UI", sans-serif;
+    background: linear-gradient(135deg,#1e1e2f,#23243a);
+    color: #f1f1f1;
+    padding: 40px 20px;
+}
+
+.container {
+    max-width: 600px;
+    margin: auto;
+}
+
+h1 {
+    text-align:center;
+    margin-bottom:30px;
+    font-weight:600;
+}
+
+button {
+    display:block;
+    margin:0 auto;
+    background:#4e73ff;
+    border:none;
+    padding:12px 28px;
+    border-radius:10px;
+    color:white;
+    font-size:15px;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+button:hover {
+    background:#3d5de0;
+}
+
+button:disabled {
+    background:gray;
+}
+
+.status {
+    text-align:center;
+    margin-top:15px;
+    opacity:0.8;
+}
+
+.card {
+    margin-top:30px;
+    background:#2b2d45;
+    border-radius:15px;
+    padding:20px;
+    box-shadow:0 8px 25px rgba(0,0,0,0.4);
+}
+
+.user-row {
+    display:flex;
+    justify-content:space-between;
+    padding:14px 10px;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.user-row:last-child {
+    border-bottom:none;
+}
+
+.username {
+    font-weight:500;
+}
+
+.power {
+    font-weight:600;
+    letter-spacing:0.5px;
+}
+
+.summary {
+    margin-top:20px;
+    background:#1f2033;
+    padding:15px;
+    border-radius:10px;
+    text-align:center;
+    font-size:14px;
+}
+.summary div {
+    margin:5px 0;
+}
+</style>
 </head>
+
 <body>
 
 <div class="container">
-    <h1>⚔️ 원격 전투력 스캐너</h1>
-    
-    <button id="scanBtn" onclick="requestScan()">스캔 요청 (Start Scan)</button>
-    <div id="status">대기 중...</div>
+    <h1>⚔ 파티 전투력</h1>
 
-    <table id="resultTable">
-        <tbody id="resultBody"></tbody>
-    </table>
+    <button id="scanBtn" onclick="requestScan()">스캔 요청</button>
+    <div class="status" id="status">대기 중...</div>
+
+    <div class="card" id="resultCard" style="display:none;">
+        <div id="resultBody"></div>
+        <div class="summary" id="summaryBox"></div>
+    </div>
 </div>
 
 <script>
-    // manage.js 주소
-    const API_URL = "https://msidlepower.netlify.app/.netlify/functions/manage"
 
-    async function requestScan() {
-        const btn = document.getElementById('scanBtn');
-        const status = document.getElementById('status');
-        const tbody = document.getElementById('resultBody');
+const API_URL = "https://msidlepower.netlify.app/.netlify/functions/manage";
 
-        btn.disabled = true;
-        status.textContent = "1. PC에 스캔 명령 전송 중...";
-        
-        try {
-            // 1. 명령 보내기 (POST)
-            await fetch(API_URL, {
-                method: "POST",
-                body: JSON.stringify({ action: "REQUEST_SCAN" })
-            });
-
-            status.textContent = "2. PC가 스캔 중입니다... (약 3~5초 대기)";
-            
-            // 2. EXE가 스캔할 시간 벌어주기 (3초 대기)
-            await new Promise(r => setTimeout(r, 3000));
-
-            // 3. 결과 가져오기 (GET)
-            checkResultLoop(0);
-
-        } catch (e) {
-            status.textContent = "오류 발생: " + e;
-            btn.disabled = false;
-        }
-    }
-
-    async function checkResultLoop(retryCount) {
-        const status = document.getElementById('status');
-        const tbody = document.getElementById('resultBody');
-
-        const res = await fetch(API_URL + "?type=data");
-        const data = await res.json();
-
-        // 데이터가 있고, 내용이 있다면 출력
-        if (data && data.length > 0) {
-            tbody.innerHTML = "";
-
-let total = 0;
-
-data.forEach((user, index) => {
-    total += user.battlepower;
-
-    tbody.innerHTML += `
-        <tr>
-            <td>${index+1}</td>
-            <td>${user.username}</td>
-            <td>${formatBattlePower(user.battlepower)}</td>
-        </tr>`;
-});
-
-const average = Math.floor(total / data.length);
-
-tbody.innerHTML += `
-    <tr style="font-weight:bold; border-top:2px solid #aaa;">
-        <td colspan="2">평균 전투력</td>
-        <td>${formatBattlePower(average)}</td>
-    </tr>
-`;
-            status.textContent = "스캔 완료!";
-            document.getElementById('scanBtn').disabled = false;
-        } else {
-            // 아직 데이터가 안 왔으면 재시도
-            if (retryCount < 5) {
-                status.textContent = `데이터 대기 중... (${retryCount+1}/5)`;
-                setTimeout(() => checkResultLoop(retryCount + 1), 1000);
-            } else {
-                status.textContent = "시간 초과: PC가 응답하지 않습니다. (EXE 켜져있나요?)";
-                document.getElementById('scanBtn').disabled = false;
-            }
-        }
-    }
-
-    function formatBattlePower(value) {
+function formatBattlePower(value) {
     const units = [
         { unit: "경", value: 1e16 },
         { unit: "조", value: 1e12 },
@@ -111,16 +125,84 @@ tbody.innerHTML += `
     for (const u of units) {
         if (remaining >= u.value) {
             const amount = Math.floor(remaining / u.value);
-            result += amount + u.unit + " ";
+            result += amount.toLocaleString() + u.unit + " ";
             remaining %= u.value;
         }
     }
 
-    if (result === "") return value.toString();
-    return result.trim();
+    return result || value.toLocaleString();
 }
+
+async function requestScan() {
+    const btn = document.getElementById("scanBtn");
+    const status = document.getElementById("status");
+
+    btn.disabled = true;
+    status.textContent = "PC에 스캔 명령 전송 중...";
+
+    await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "REQUEST_SCAN" })
+    });
+
+    status.textContent = "스캔 진행 중...";
+    await new Promise(r => setTimeout(r, 3000));
+
+    checkResultLoop(0);
+}
+
+async function checkResultLoop(retry) {
+    const status = document.getElementById("status");
+
+    const res = await fetch(API_URL + "?type=data");
+    const data = await res.json();
+
+    if (data && data.length > 0) {
+        renderUI(data);
+        status.textContent = "스캔 완료!";
+        document.getElementById("scanBtn").disabled = false;
+    } else {
+        if (retry < 5) {
+            status.textContent = `데이터 대기 중... (${retry+1}/5)`;
+            setTimeout(() => checkResultLoop(retry + 1), 1000);
+        } else {
+            status.textContent = "응답 시간 초과";
+            document.getElementById("scanBtn").disabled = false;
+        }
+    }
+}
+
+function renderUI(data) {
+    const body = document.getElementById("resultBody");
+    const summary = document.getElementById("summaryBox");
+    const card = document.getElementById("resultCard");
+
+    body.innerHTML = "";
+    card.style.display = "block";
+
+    let total = 0;
+
+    data.forEach(user => {
+        total += user.battlepower;
+
+        body.innerHTML += `
+            <div class="user-row">
+                <div class="username">${user.username}</div>
+                <div class="power">${formatBattlePower(user.battlepower)}</div>
+            </div>
+        `;
+    });
+
+    const avg = Math.floor(total / data.length);
+
+    summary.innerHTML = `
+        <div>👥 파티 인원 : ${data.length}명</div>
+        <div>⚡ 총 전투력 : ${formatBattlePower(total)}</div>
+        <div>📊 평균 전투력 : ${formatBattlePower(avg)}</div>
+    `;
+}
+
 </script>
 
 </body>
-
 </html>
