@@ -61,9 +61,28 @@
         // 데이터가 있고, 내용이 있다면 출력
         if (data && data.length > 0) {
             tbody.innerHTML = "";
-            data.forEach((user, index) => {
-                tbody.innerHTML += `<tr><td>${index+1}</td><td>${user.username}</td><td>${user.battlepower}</td></tr>`;
-            });
+
+let total = 0;
+
+data.forEach((user, index) => {
+    total += user.battlepower;
+
+    tbody.innerHTML += `
+        <tr>
+            <td>${index+1}</td>
+            <td>${user.username}</td>
+            <td>${formatBattlePower(user.battlepower)}</td>
+        </tr>`;
+});
+
+const average = Math.floor(total / data.length);
+
+tbody.innerHTML += `
+    <tr style="font-weight:bold; border-top:2px solid #aaa;">
+        <td colspan="2">평균 전투력</td>
+        <td>${formatBattlePower(average)}</td>
+    </tr>
+`;
             status.textContent = "스캔 완료!";
             document.getElementById('scanBtn').disabled = false;
         } else {
@@ -77,7 +96,31 @@
             }
         }
     }
+
+    function formatBattlePower(value) {
+    const units = [
+        { unit: "경", value: 1e16 },
+        { unit: "조", value: 1e12 },
+        { unit: "억", value: 1e8 },
+        { unit: "만", value: 1e4 }
+    ];
+
+    let result = "";
+    let remaining = value;
+
+    for (const u of units) {
+        if (remaining >= u.value) {
+            const amount = Math.floor(remaining / u.value);
+            result += amount + u.unit + " ";
+            remaining %= u.value;
+        }
+    }
+
+    if (result === "") return value.toString();
+    return result.trim();
+}
 </script>
 
 </body>
+
 </html>
